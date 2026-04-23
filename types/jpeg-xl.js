@@ -90,7 +90,9 @@ const readUint64BigEndian = (bytes, offset) => {
 	return value <= Number.MAX_SAFE_INTEGER ? value : Number.POSITIVE_INFINITY;
 };
 
-const readBoxType = (bytes, offset) => String.fromCodePoint(
+// JPEG XL box types are 4-byte ASCII identifiers, not arbitrary Unicode code points.
+// eslint-disable-next-line unicorn/prefer-code-point
+const readBoxType = (bytes, offset) => String.fromCharCode(
 	bytes[offset],
 	bytes[offset + 1],
 	bytes[offset + 2],
@@ -176,7 +178,11 @@ const dimensionsFromCodestream = bytes => {
 		width = Math.floor(height * numerator / denominator);
 	}
 
-	if (!reader.valid || width === undefined || height === undefined || width <= 0 || height <= 0) {
+	if (!reader.valid
+		|| width === undefined
+		|| height === undefined
+		|| width <= 0
+		|| height <= 0) {
 		return;
 	}
 
@@ -219,7 +225,9 @@ const dimensionsFromContainer = bytes => {
 
 		switch (box.type) {
 			case 'ftyp': {
-				if (boxIndex !== 2 || box.contentStart + 4 > bytes.length || readBoxType(bytes, box.contentStart) !== 'jxl ') {
+				if (boxIndex !== 2
+					|| box.contentStart + 4 > bytes.length
+					|| readBoxType(bytes, box.contentStart) !== 'jxl ') {
 					return;
 				}
 
@@ -233,7 +241,8 @@ const dimensionsFromContainer = bytes => {
 			}
 
 			case 'jxlp': {
-				if (box.contentStart + 4 > bytes.length || (!box.unbounded && box.contentEnd < box.contentStart + 4)) {
+				if (box.contentStart + 4 > bytes.length
+					|| (!box.unbounded && box.contentEnd < box.contentStart + 4)) {
 					return;
 				}
 
@@ -272,7 +281,7 @@ export default function jpegXl(bytes) {
 		return;
 	}
 
-  if (isJpegXlContainer(bytes)) {
+	if (isJpegXlContainer(bytes)) {
 		return dimensionsFromContainer(bytes);
-  }
+	}
 }
