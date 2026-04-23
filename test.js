@@ -9,6 +9,70 @@ const matches = (t, filename, dimensions) => {
 	t.deepEqual(imageDimensionsFromData(data), dimensions);
 };
 
+const concatBytes = (...chunks) => {
+	const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+	const bytes = new Uint8Array(length);
+	let offset = 0;
+
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.length;
+	}
+
+	return bytes;
+};
+
+const uint32ToBytes = value => {
+	const bytes = new Uint8Array(4);
+	const view = new DataView(bytes.buffer);
+	view.setUint32(0, value, false);
+	return bytes;
+};
+
+const makeJxlBox = (type, payload) => {
+	const bytes = new Uint8Array(8 + payload.length);
+	const view = new DataView(bytes.buffer);
+	view.setUint32(0, bytes.length, false);
+	bytes.set(Uint8Array.from([type.codePointAt(0), type.codePointAt(1), type.codePointAt(2), type.codePointAt(3)]), 4);
+	bytes.set(payload, 8);
+	return bytes;
+};
+
+const jpegXlContainerHeader = Uint8Array.from([
+	0,
+	0,
+	0,
+	0x0C,
+	0x4A,
+	0x58,
+	0x4C,
+	0x20,
+	0x0D,
+	0x0A,
+	0x87,
+	0x0A,
+	0,
+	0,
+	0,
+	0x14,
+	0x66,
+	0x74,
+	0x79,
+	0x70,
+	0x6A,
+	0x78,
+	0x6C,
+	0x20,
+	0,
+	0,
+	0,
+	0,
+	0x6A,
+	0x78,
+	0x6C,
+	0x20,
+]);
+
 test('png', t => {
 	matches(t, 'png/valid.png', {width: 30, height: 20, type: 'png'});
 });
@@ -45,8 +109,28 @@ test('gif', t => {
 	matches(t, 'gif/valid.gif', {width: 30, height: 17, type: 'gif'});
 });
 
-test.failing('jpeg xl', t => {
-	matches(t, 'jpeg xl/valid.jxl', {width: 30, height: 17});
+test('jpeg xl', t => {
+	matches(t, 'jpeg xl/valid.jxl', {width: 30, height: 20, type: 'jxl'});
+});
+
+test('jpeg xl - container jxlc', t => {
+	const codestream = fs.readFileSync('fixtures/jpeg xl/valid.jxl');
+	const data = concatBytes(jpegXlContainerHeader, makeJxlBox('jxlc', codestream));
+	t.deepEqual(imageDimensionsFromData(data), {width: 30, height: 20, type: 'jxl'});
+});
+
+test('jpeg xl - container jxlp', t => {
+	const codestream = fs.readFileSync('fixtures/jpeg xl/valid.jxl');
+	const firstPart = concatBytes(uint32ToBytes(0), codestream.subarray(0, 1));
+	const secondPart = concatBytes(uint32ToBytes(2_147_483_649), codestream.subarray(1, 11));
+	const data = concatBytes(
+		jpegXlContainerHeader,
+		makeJxlBox('jxlp', firstPart),
+		makeJxlBox('unkn', Uint8Array.from([1, 2, 3])),
+		makeJxlBox('jxlp', secondPart),
+	);
+
+	t.deepEqual(imageDimensionsFromData(data), {width: 30, height: 20, type: 'jxl'});
 });
 
 test('avif', t => {
@@ -147,6 +231,14 @@ test('imageDimensionsFromData - HEIC subarray still works', t => {
 	padded.set(original, 10);
 	const view = padded.subarray(10); // Non-zero byteOffset
 	t.deepEqual(imageDimensionsFromData(view), {width: 8, height: 10, type: 'heic'});
+});
+
+test('imageDimensionsFromData - JPEG XL subarray still works', t => {
+	const original = fs.readFileSync('fixtures/jpeg xl/valid.jxl');
+	const padded = new Uint8Array(10 + original.length);
+	padded.set(original, 10);
+	const view = padded.subarray(10); // Non-zero byteOffset
+	t.deepEqual(imageDimensionsFromData(view), {width: 30, height: 20, type: 'jxl'});
 });
 
 test('getIsobmffFtypBrands - Works on subarray view', t => {

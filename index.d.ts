@@ -1,7 +1,7 @@
 /**
 Supported image format types.
 */
-export type ImageType = 'png' | 'jpeg' | 'gif' | 'webp' | 'avif' | 'heic';
+export type ImageType = 'png' | 'jpeg' | 'gif' | 'webp' | 'avif' | 'heic' | 'jxl';
 
 /**
 Get the dimensions of an image by reading the least amount of data.
@@ -11,7 +11,7 @@ Prefer this method.
 @param stream - The image data.
 @returns The image dimensions, or `undefined` if the image format is not supported or the image data is invalid.
 
-Note: Returns raw pixel dimensions; orientation (EXIF or HEIF/AVIF `irot`) is not applied.
+Note: Returns raw pixel dimensions; orientation (EXIF, HEIF/AVIF `irot`, or JPEG XL orientation) is not applied.
 
 @example
 ```
@@ -49,7 +49,7 @@ Use this method if you already have the image loaded in memory.
 @param data - The image data.
 @returns The image dimensions, or `undefined` if the image format is not supported or the image data is invalid.
 
-Note: Returns raw pixel dimensions; orientation (EXIF or HEIF/AVIF `irot`) is not applied.
+Note: Returns raw pixel dimensions; orientation (EXIF, HEIF/AVIF `irot`, or JPEG XL orientation) is not applied.
 
 @example
 ```

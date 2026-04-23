@@ -4,6 +4,7 @@ import gif from './types/gif.js';
 import webp from './types/webp.js';
 import avif from './types/avif.js';
 import heic from './types/heic.js';
+import jpegXl from './types/jpeg-xl.js';
 
 export function imageDimensionsFromData(bytes) {
 	// The shortest signature is 3 bytes.
@@ -19,6 +20,7 @@ export function imageDimensionsFromData(bytes) {
 		?? gif(bytes)
 		?? jpeg(bytes)
 		?? webp(bytes)
+		?? jpegXl(bytes)
 		?? avif(bytes)
 		?? heic(bytes);
 }

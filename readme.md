@@ -4,7 +4,7 @@
 
 *Works in any modern JavaScript environment (browsers, Node.js, Bun, Deno, etc).*
 
-Supporting all kinds of image formats is a non-goal. However, pull requests for adding JPEG XL are welcome.
+Supporting all kinds of image formats is a non-goal.
 
 ## Supported formats
 
@@ -14,6 +14,7 @@ Supporting all kinds of image formats is a non-goal. However, pull requests for 
 - WebP
 - AVIF
 - HEIF (including HEIC)
+- JPEG XL
 
 ## Install
 
@@ -38,7 +39,7 @@ console.log(await imageDimensionsFromStream(body));
 
 ## API
 
-`ImageType` is exported and can be one of: `'png'`, `'jpeg'`, `'gif'`, `'webp'`, `'avif'`, or `'heic'`.
+`ImageType` is exported and can be one of: `'png'`, `'jpeg'`, `'gif'`, `'webp'`, `'avif'`, `'heic'`, or `'jxl'`.
 
 ### `imageDimensionsFromStream(stream: ReadableStream<Uint8Array>): Promise<{width: number; height: number; type: ImageType} | undefined>`
 
@@ -48,7 +49,7 @@ Prefer this method.
 
 Returns the image dimensions and type, or `undefined` if the image format is not supported or the image data is invalid.
 
-Note: Returns raw pixel dimensions; orientation (EXIF or HEIF/AVIF `irot`) is not applied.
+Note: Returns raw pixel dimensions; orientation (EXIF, HEIF/AVIF `irot`, or JPEG XL orientation) is not applied.
 
 ```js
 // Node.js example
@@ -69,7 +70,7 @@ This method can be useful if you already have the image loaded in memory.
 
 Returns the image dimensions and type, or `undefined` if the image format is not supported or the image data is invalid.
 
-Note: Returns raw pixel dimensions; orientation (EXIF or HEIF/AVIF `irot`) is not applied.
+Note: Returns raw pixel dimensions; orientation (EXIF, HEIF/AVIF `irot`, or JPEG XL orientation) is not applied.
 
 ```js
 import {imageDimensionsFromData} from 'image-dimensions';
